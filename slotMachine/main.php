@@ -1,27 +1,37 @@
 <?php
+
 $elements = [1, 2];
 $playerBalance = 100;
 $rows = 3;
 $column = 3;
 
-function checkWin($slotMachine, $rows, $columns, $elementCount) {
+function calculateBaseMultiplier($rows, $columns, $elementCount) {
     $winMultiplier = 1;
-    foreach ($slotMachine as $row) {
-        if (count(array_unique($row)) == 1) {
-            $winMultiplier *= 2;
-        }
-    }
     $winMultiplier += ($elementCount - 2) * 0.4;
-    $winMultiplier += ($rows - 3) * 0.3;
     $winMultiplier -= ($columns - 3) * 0.2;
+    $winMultiplier += ($rows - 3) * 0.3;
     return $winMultiplier;
 }
 
+function checkWin($slotMachine, $rows, $columns, $elementCount) {
+    $winMultiplier = calculateBaseMultiplier($rows, $columns, $elementCount);
+    $hasWinningRow = false;
+
+    foreach ($slotMachine as $row) {
+        if (count(array_unique($row)) == 1) {
+            $hasWinningRow = true;
+            break;
+        }
+    }
+
+    return $hasWinningRow ? $winMultiplier : 0;
+}
+
 while (true) {
-    $winMultiplier = checkWin([], $rows, $column, count($elements));
-    echo "Current win multiplier: $winMultiplier\n";
+    $baseMultiplier = calculateBaseMultiplier($rows, $column, count($elements));
+    echo "Current win multiplier: $baseMultiplier\n";
     echo "1. Play\n2. Change table size\n3. Change element count\n";
-    echo "4. Balance\n5. Cash Out \n6. Get more credits\n";
+    echo "4. Balance\n5. Cash Out\n6. Get more credits\n";
     $playerChoice = readline("Enter your choice: ");
     switch ($playerChoice) {
         case '1':
@@ -48,7 +58,7 @@ while (true) {
                         echo implode(" ", $row) . "\n";
                     }
                     $winMultiplier = checkWin($slotMachine, $rows, $column, count($elements));
-                    if ($winMultiplier > 1) {
+                    if ($winMultiplier > 0) {
                         $playerBalance += $winMultiplier * $betAmount;
                         echo "You won! Your new balance is: " . $playerBalance . "\n";
                     } else {
@@ -62,7 +72,7 @@ while (true) {
             $rows = readline("How many rows? \n");
             $column = readline("How many columns? \n");
             if ($rows < 1 || $column < 2) {
-                echo "Error: Rows and columns must be 1 or more \n";
+                echo "Error: Rows must be 1 or more and columns must be 2 or more \n";
             }
             break;
 
@@ -70,7 +80,7 @@ while (true) {
             $elementCount = readline("How many elements? \n");
             if ($elementCount < 2) {
                 echo "Error: Element count must be 2 or more \n";
-                return;
+                break;
             }
             $elements = range(1, $elementCount);
             break;
@@ -78,6 +88,7 @@ while (true) {
         case '4':
             echo "Your balance is: $playerBalance \n";
             break;
+
         case '5':
             echo "Cashing out... Your balance is: $playerBalance \n";
             exit();
@@ -96,3 +107,4 @@ while (true) {
             echo "Invalid choice.\n";
     }
 }
+?>
